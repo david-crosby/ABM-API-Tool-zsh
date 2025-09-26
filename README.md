@@ -3,7 +3,7 @@
 🍎 A comprehensive ZSH script for automating Apple Business Manager device operations via the official REST API.
 
 [![Shell](https://img.shields.io/badge/shell-zsh-green.svg)](https://www.zsh.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 [![Jamf](https://img.shields.io/badge/jamf-compatible-orange.svg)](https://www.jamf.com/)
 
@@ -328,7 +328,7 @@ done
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
