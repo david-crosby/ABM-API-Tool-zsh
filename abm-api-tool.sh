@@ -7,7 +7,7 @@
 # USAGE: Can be run standalone, from Jamf policies, or as a utility script
 #
 # Author: David 'Bing' Crosby
-# Version: 1.0
+# Version: 3.0
 # Date: 2024-06-10
 # License: GNU General Public License v3.0
 
@@ -17,8 +17,8 @@
 # ============================================================================
 # PREAMBLE
 # ============================================================================
-# Enable strict error handling
 
+# Enable strict error handling
 set -euo pipefail
 
 # ============================================================================
@@ -49,7 +49,7 @@ readonly NC='\033[0m' # No Color
 log() {
     local level="$1"
     shift
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] $*" | tee -a "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] $*" | tee -a "$LOG_FILE" >&2
 }
 
 log_info() { log "INFO" "$@"; }
@@ -59,10 +59,10 @@ log_debug() {
     [[ "${DEBUG:-}" == "1" ]] && log "DEBUG" "$@" || true
 }
 
-print_success() { printf "${GREEN}✓ %s${NC}\n" "$*"; }
-print_error() { printf "${RED}✗ %s${NC}\n" "$*"; }
-print_warning() { printf "${YELLOW}⚠ %s${NC}\n" "$*"; }
-print_info() { printf "${BLUE}ℹ %s${NC}\n" "$*"; }
+print_success() { printf "${GREEN}✓ %s${NC}\n" "$*" >&2; }
+print_error() { printf "${RED}✗ %s${NC}\n" "$*" >&2; }
+print_warning() { printf "${YELLOW}⚠ %s${NC}\n" "$*" >&2; }
+print_info() { printf "${BLUE}ℹ %s${NC}\n" "$*" >&2; }
 
 cleanup() {
     local exit_code=$?
@@ -72,63 +72,61 @@ cleanup() {
 trap cleanup EXIT
 
 usage() {
-    cat << EOF
-${GREEN}Apple Business Manager API Tool${NC}
-
-${BLUE}USAGE:${NC}
-    $SCRIPT_NAME <command> [options]
-
-${BLUE}COMMANDS:${NC}
-    list-devices [--format json|table] [--filter active|inactive|all] [--limit N]
-        List all organisational devices
-        
-    device-details <device-id> [--format json|table]
-        Get detailed information for a specific device
-        
-    delete-device <device-id> [--confirm]
-        Remove a device from Apple Business Manager
-        
-    move-device <device-id> <target-mdm-server-id> [--confirm]
-        Move a device from one MDM to another
-        
-    list-mdm-servers [--format json|table]
-        List all registered MDM servers
-        
-    validate-credentials
-        Test API connectivity and authentication
-
-${BLUE}OPTIONS:${NC}
-    --format json|table     Output format (default: table)
-    --filter active|inactive|all    Filter devices by status (default: all)
-    --limit N               Limit number of results (default: 100)
-    --confirm               Skip confirmation prompts
-    --debug                 Enable debug logging
-    --help                  Show this help message
-
-${BLUE}ENVIRONMENT VARIABLES:${NC}
-    ABM_CLIENT_ID           Apple Business Manager API Client ID
-    ABM_PRIVATE_KEY_PATH    Path to the private key (.pem file)
-    ABM_KEY_ID              Key ID from Apple Business Manager
-
-${BLUE}JAMF PARAMETERS:${NC}
-    \$4 = ABM_CLIENT_ID
-    \$5 = ABM_PRIVATE_KEY_PATH  
-    \$6 = ABM_KEY_ID
-
-${BLUE}EXAMPLES:${NC}
-    # List all devices in table format
-    $SCRIPT_NAME list-devices --format table
+    printf "${GREEN}Apple Business Manager API Tool${NC}\n\n"
     
-    # Get details for a specific device
-    $SCRIPT_NAME device-details "ABC123DEF456"
+    printf "${BLUE}USAGE:${NC}\n"
+    printf "    %s <command> [options]\n\n" "$SCRIPT_NAME"
     
-    # Move device to different MDM server
-    $SCRIPT_NAME move-device "ABC123DEF456" "mdm-server-123" --confirm
-    
-    # Delete a device (with confirmation)
-    $SCRIPT_NAME delete-device "ABC123DEF456"
+    printf "${BLUE}COMMANDS:${NC}\n"
+    printf "    list-devices [--format json|table] [--filter active|inactive|all] [--limit N]\n"
+    printf "        List all organisational devices\n"
+    printf "        \n"
+    printf "    device-details <device-id> [--format json|table]\n"
+    printf "        Get detailed information for a specific device\n"
+    printf "        \n"
+    printf "    delete-device <device-id> [--confirm]\n"
+    printf "        Remove a device from Apple Business Manager\n"
+    printf "        \n"
+    printf "    move-device <device-id> <target-mdm-server-id> [--confirm]\n"
+    printf "        Move a device from one MDM to another\n"
+    printf "        \n"
+    printf "    list-mdm-servers [--format json|table]\n"
+    printf "        List all registered MDM servers\n"
+    printf "        \n"
+    printf "    validate-credentials\n"
+    printf "        Test API connectivity and authentication\n\n"
 
-EOF
+    printf "${BLUE}OPTIONS:${NC}\n"
+    printf "    --format json|table     Output format (default: table)\n"
+    printf "    --filter active|inactive|all    Filter devices by status (default: all)\n"
+    printf "    --limit N               Limit number of results (default: 100)\n"
+    printf "    --confirm               Skip confirmation prompts\n"
+    printf "    --debug                 Enable debug logging\n"
+    printf "    --help                  Show this help message\n\n"
+
+    printf "${BLUE}ENVIRONMENT VARIABLES:${NC}\n"
+    printf "    ABM_CLIENT_ID           Apple Business Manager API Client ID\n"
+    printf "    ABM_PRIVATE_KEY_PATH    Path to the private key (.pem file)\n"
+    printf "    ABM_KEY_ID              Key ID from Apple Business Manager\n\n"
+
+    printf "${BLUE}JAMF PARAMETERS:${NC}\n"
+    printf "    \$4 = ABM_CLIENT_ID\n"
+    printf "    \$5 = ABM_PRIVATE_KEY_PATH\n"  
+    printf "    \$6 = ABM_KEY_ID\n\n"
+
+    printf "${BLUE}EXAMPLES:${NC}\n"
+    printf "    # List all devices in table format\n"
+    printf "    %s list-devices --format table\n" "$SCRIPT_NAME"
+    printf "    \n"
+    printf "    # Get details for a specific device\n"
+    printf "    %s device-details \"ABC123DEF456\"\n" "$SCRIPT_NAME"
+    printf "    \n"
+    printf "    # Move device to different MDM server\n"
+    printf "    %s move-device \"ABC123DEF456\" \"mdm-server-123\" --confirm\n" "$SCRIPT_NAME"
+    printf "    \n"
+    printf "    # Delete a device (with confirmation)\n"
+    printf "    %s delete-device \"ABC123DEF456\"\n" "$SCRIPT_NAME"
+    printf "\n"
 }
 
 # ============================================================================
@@ -180,51 +178,135 @@ generate_jwt() {
     local expiry_time=$((current_time + 3600)) # 1 hour from now
     local jti=$(uuidgen | tr '[:upper:]' '[:lower:]')
     
+    # Verify key file exists and is readable
+    if [[ ! -r "$ABM_PRIVATE_KEY_PATH" ]]; then
+        log_error "Cannot read private key file: $ABM_PRIVATE_KEY_PATH"
+        return 1
+    fi
+    
+    log_debug "Using Client ID: BUSINESSAPI.${ABM_CLIENT_ID}"
+    log_debug "Using Key ID: ${ABM_KEY_ID}"
+    log_debug "JWT will expire at: $expiry_time (current: $current_time)"
+    
     # JWT Header
     local header=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ABM_KEY_ID" | base64 | tr -d '=\n' | tr '+/' '-_')
     
-    # JWT Payload
+    # JWT Payload - Note: sub and iss should be the FULL client ID including BUSINESSAPI prefix
     local payload=$(printf '{"sub":"BUSINESSAPI.%s","aud":"%s","iat":%d,"exp":%d,"jti":"%s","iss":"BUSINESSAPI.%s"}' \
         "$ABM_CLIENT_ID" "$OAUTH_TOKEN_URL" "$current_time" "$expiry_time" "$jti" "$ABM_CLIENT_ID" | \
         base64 | tr -d '=\n' | tr '+/' '-_')
     
     # Sign the JWT
     local unsigned_token="${header}.${payload}"
-    local signature=$(printf '%s' "$unsigned_token" | \
+    local signature
+    signature=$(printf '%s' "$unsigned_token" | \
         openssl dgst -sha256 -sign "$ABM_PRIVATE_KEY_PATH" | \
-        base64 | tr -d '=\n' | tr '+/' '-_')
+        base64 | tr -d '=\n' | tr '+/' '-_') || {
+        log_error "Failed to sign JWT with private key"
+        return 1
+    }
     
-    printf '%s.%s.%s' "$header" "$payload" "$signature"
+    local jwt="${header}.${payload}.${signature}"
+    log_debug "JWT header: $header"
+    log_debug "JWT payload: $payload"
+    log_debug "Generated JWT: ${jwt:0:100}..."
+    
+    printf '%s' "$jwt"
 }
 
 get_access_token() {
+    log_debug "=== Starting get_access_token function ==="
+    log_debug "DEBUG variable: ${DEBUG:-unset}"
     log_debug "Requesting OAuth access token"
     
+    # Ensure client ID has proper format (add BUSINESSAPI. prefix if not present)
+    local full_client_id
+    if [[ "$ABM_CLIENT_ID" == BUSINESSAPI.* ]]; then
+        full_client_id="$ABM_CLIENT_ID"
+        log_debug "Client ID already has BUSINESSAPI prefix: ${ABM_CLIENT_ID}"
+    else
+        full_client_id="BUSINESSAPI.${ABM_CLIENT_ID}"
+        log_debug "Added BUSINESSAPI prefix to client ID: ${ABM_CLIENT_ID} -> ${full_client_id}"
+    fi
+    
+    log_debug "Resolved Client ID: ${full_client_id}"
+    log_debug "About to call generate_jwt with parameter: '${full_client_id}'"
+    
     local jwt
-    jwt=$(generate_jwt) || {
+    jwt=$(generate_jwt "$full_client_id") || {
         log_error "Failed to generate JWT"
         return 1
     }
     
+    log_debug "Generated JWT: ${jwt:0:50}..."
+    
+    # Construct the request URL with parameters (Apple's preferred format)
+    local token_url="${OAUTH_TOKEN_URL}?grant_type=client_credentials&client_id=${full_client_id}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${jwt}&scope=business.api"
+    
+    log_debug "Making token request to: ${OAUTH_TOKEN_URL}"
+    log_debug "Client ID for HTTP request: ${full_client_id}"
+    log_debug "JWT length: ${#jwt} characters"
+    
+    # Make the request with verbose output in debug mode
+    local curl_cmd=(
+        curl -s -X POST
+        -H "Host: account.apple.com"
+        -H "Content-Type: application/x-www-form-urlencoded"
+    )
+    
+    # Add verbose flag if debug is enabled
+    if [[ "${DEBUG:-}" == "1" ]]; then
+        curl_cmd+=(-v)
+        log_debug "Making verbose curl request"
+    fi
+    
+    curl_cmd+=("$token_url")
+    
+    log_debug "About to execute curl command"
     local response
-    response=$(curl -s -X POST "$OAUTH_TOKEN_URL" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "grant_type=client_credentials" \
-        -d "client_id=BUSINESSAPI.${ABM_CLIENT_ID}" \
-        -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
-        -d "client_assertion=${jwt}" \
-        -d "scope=business.api") || {
-        log_error "Failed to request access token"
+    response=$("${curl_cmd[@]}" 2>&1) || {
+        log_error "Failed to request access token - curl error"
+        if [[ "${DEBUG:-}" == "1" ]]; then
+            log_debug "Curl output: $response"
+        fi
         return 1
     }
+    
+    log_debug "Curl command completed"
+    
+    # In debug mode, show the full response
+    if [[ "${DEBUG:-}" == "1" ]]; then
+        log_debug "Full curl response: $response"
+        # Extract just the JSON part (after the verbose headers)
+        local json_response
+        json_response=$(echo "$response" | tail -n 1)
+        log_debug "JSON response: $json_response"
+        response="$json_response"
+    fi
+    
+    log_debug "About to validate JSON response"
+    
+    # Check if response is valid JSON
+    if ! echo "$response" | jq . >/dev/null 2>&1; then
+        log_error "Invalid JSON response received"
+        log_debug "Raw response: $response"
+        return 1
+    fi
+    
+    log_debug "JSON is valid, checking for errors"
     
     # Check if response contains an error
     if echo "$response" | jq -e '.error' >/dev/null 2>&1; then
         local error_msg
         error_msg=$(echo "$response" | jq -r '.error_description // .error')
         log_error "OAuth error: $error_msg"
+        if [[ "${DEBUG:-}" == "1" ]]; then
+            log_debug "Full error response: $response"
+        fi
         return 1
     fi
+    
+    log_debug "No errors found, extracting access token"
     
     # Extract access token
     local access_token
@@ -240,6 +322,7 @@ get_access_token() {
         return 1
     fi
     
+    log_debug "Access token received: ${access_token:0:20}..."
     printf '%s' "$access_token"
 }
 
@@ -484,21 +567,24 @@ validate_credentials() {
     }
     print_success "Credentials loaded successfully"
     
-    print_info "Testing JWT generation..."
-    local jwt
-    jwt=$(generate_jwt) || {
-        print_error "JWT generation failed"
+    # Verify private key is EC format
+    print_info "Validating private key format..."
+    if ! openssl ec -in "$ABM_PRIVATE_KEY_PATH" -noout 2>/dev/null; then
+        print_error "Private key is not in EC (Elliptic Curve) format"
+        log_error "Apple Business Manager requires EC private keys for ES256 signing"
         return 1
-    }
-    print_success "JWT generated successfully"
+    fi
+    print_success "Private key format validated (EC)"
     
-    print_info "Testing OAuth token retrieval..."
+    print_info "Testing JWT generation..."
     local access_token
     access_token=$(get_access_token) || {
         print_error "OAuth token retrieval failed"
+        log_error "get_access_token returned non-zero exit code"
         return 1
     }
     print_success "Access token retrieved successfully"
+    log_debug "Token: ${access_token:0:20}..."
     
     print_info "Testing API connectivity..."
     local response
@@ -675,6 +761,11 @@ main() {
                         limit="$2"
                         shift 2
                         ;;
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
+                        shift
+                        ;;
                     *)
                         print_error "Unknown option for list-devices: $1"
                         return 1
@@ -701,6 +792,11 @@ main() {
                         format="$2"
                         shift 2
                         ;;
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
+                        shift
+                        ;;
                     *)
                         print_error "Unknown option for device-details: $1"
                         return 1
@@ -725,6 +821,11 @@ main() {
                 case $1 in
                     --confirm)
                         confirm="true"
+                        shift
+                        ;;
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
                         shift
                         ;;
                     *)
@@ -754,6 +855,11 @@ main() {
                         confirm="true"
                         shift
                         ;;
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
+                        shift
+                        ;;
                     *)
                         print_error "Unknown option for move-device: $1"
                         return 1
@@ -773,6 +879,11 @@ main() {
                         format="$2"
                         shift 2
                         ;;
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
+                        shift
+                        ;;
                     *)
                         print_error "Unknown option for list-mdm-servers: $1"
                         return 1
@@ -784,6 +895,21 @@ main() {
             ;;
             
         validate-credentials)
+            # Parse any remaining options for validate-credentials
+            while [[ $# -gt 0 ]]; do
+                case $1 in
+                    --debug)
+                        DEBUG=1
+                        log_debug "Debug mode enabled"
+                        shift
+                        ;;
+                    *)
+                        print_error "Unknown option for validate-credentials: $1"
+                        return 1
+                        ;;
+                esac
+            done
+            
             validate_credentials
             ;;
             
@@ -800,6 +926,7 @@ main() {
 # ============================================================================
 
 # Only run main if script is executed directly (not sourced)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# In ZSH, check if script is being run directly vs sourced
+if [[ "${ZSH_EVAL_CONTEXT:-}" != *:file* ]]; then
     main "$@"
 fi
